@@ -8,6 +8,7 @@ class Cube {
       F: Array(9).fill('g'),
       B: Array(9).fill('b'),
     };
+    this.lastMove = '';
   }
 
   getCubeString() {
@@ -17,11 +18,14 @@ class Cube {
   rotateFace(face, direction = 'CW') {
     if (face === 'U' && direction === 'CW') {
       this.rotateFaceClockwise('U');
+
       const temp = this.faces.F.slice(0, 3);
       this.faces.F.splice(0, 3, ...this.faces.R.slice(0, 3));
       this.faces.R.splice(0, 3, ...this.faces.B.slice(0, 3));
       this.faces.B.splice(0, 3, ...this.faces.L.slice(0, 3));
       this.faces.L.splice(0, 3, ...temp);
+
+      this.lastMove = `${face}-${direction}`;
     }
   }
 
@@ -35,8 +39,8 @@ class Cube {
     this.faces[face] = rotated;
   }
 
-  scramble(moves = 10) {
-    const faces = ['U']; 
+  scramble(moves = 1) {
+    const faces = ['U'];
     const dirs = ['CW'];
     for (let i = 0; i < moves; i++) {
       const face = faces[Math.floor(Math.random() * faces.length)];
@@ -50,14 +54,40 @@ function getCubeSvg(cubeString) {
   return `<pre>${cubeString}</pre>`;
 }
 
-function displayCube(cube) {
+function getFaceDescription(face) {
+  switch (face) {
+    case 'U': return 'Upwards';
+    case 'D': return 'Downwards';
+    case 'L': return 'Left';
+    case 'R': return 'Right';
+    case 'F': return 'Front';
+    case 'B': return 'Back';
+    default: return '';
+  }
+}
+
+let callCount = 0;
+
+function displayCube(cube, label = null) {
   const cubeOutput = document.getElementById('cube-output');
+  let heading;
+
+  if (label) {
+    heading = label;
+  } else {
+    heading = callCount === 0 ? 'Before Rotation' : 'After Rotation';
+    if (callCount > 0 && cube.lastMove) {
+      const [face, dir] = cube.lastMove.split('-');
+      heading += ` - Clockwise ${face} (${getFaceDescription(face)})`;
+    }
+  }
+
+  cubeOutput.innerHTML += `<h2>${heading}</h2>`;
   cubeOutput.innerHTML += getCubeSvg(cube.getCubeString()) + '<br>';
+  callCount++;
 }
 
 const cube = new Cube();
 displayCube(cube);
 cube.scramble();
 displayCube(cube);
-
-// TODO: Implement solveCube(cube);
